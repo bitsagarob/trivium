@@ -1,7 +1,7 @@
 {
   "name": "Trivium",
   "display": "standalone",
-  "background_color": "#282828",
-  "theme_color": "#282828",
+  "background_color": "#002b36",
+  "theme_color": "#002b36",
   "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
 }
