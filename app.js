@@ -80,10 +80,12 @@ async function addKey() {
 async function refresh() {
   $('#wait').hidden = false; $('#sats').hidden = true
   const descs = [await branch(0), await branch(1)]                                                // 1000 addresses each
-  let found
+  const pending = (await rpc('getdescriptoractivity', [], descs, true)).activity                   // mempool first: a coin mined
+  let found                                                                                        // during the scan stays in view
   while (!found) found = await rpc('scanblocks', 'start', descs).catch(e => { if (!/in progress/.test(e.message)) throw e; return sleep(5000) })
-  const history = (await rpc('getdescriptoractivity', found.relevant_blocks, descs, true)).activity // every receive and spend, mempool too
-  const spent = new Set(history.map(a => a.prevout_txid + ':' + a.prevout_vout)), paid = history.filter(a => a.type === 'receive')
+  const history = [...pending, ...(await rpc('getdescriptoractivity', found.relevant_blocks, descs, false)).activity]
+  const spent = new Set(history.map(a => a.prevout_txid + ':' + a.prevout_vout))
+  const paid = [...new Map(history.filter(a => a.type === 'receive').map(c => [c.txid + ':' + c.vout, c])).values()]
   coins = paid.filter(c => !spent.has(c.txid + ':' + c.vout))
   const all = await Promise.all(descs.map(d => rpc('deriveaddresses', d, [0, 999])))
   next = all.map(list => 1 + Math.max(-1, ...paid.map(c => list.indexOf(c.output_spk.address))))   // past every address ever paid
