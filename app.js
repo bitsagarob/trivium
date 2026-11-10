@@ -11,11 +11,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
 const btc = sats => (sats / 1e8).toFixed(8)
 const tap = el => new Promise(r => el.addEventListener('click', r, { once: true }))
 
-async function rpc(method, ...params) {
-  const r = await (await fetch(location.search.includes('signet') ? 'signet' : 'rpc', { method: 'POST', body: JSON.stringify({ id: 0, method, params }) })).json()
-  if (r.error) throw r.error
-  return r.result
-}
+const rpc = (method, ...params) => fetch(location.search.includes('signet') ? 'signet' : 'rpc', { method: 'POST', body: JSON.stringify({ id: 0, method, params }) })
+  .then(r => r.json()).then(r => r.error ? Promise.reject(r.error) : r.result)
 // Core silently scans only the first path of a <0;1> descriptor, so ask for each branch on its own.
 const branch = async b => (await rpc('getdescriptorinfo', desc().replaceAll('<0;1>', b))).descriptor
 const address = async b => (await rpc('deriveaddresses', await branch(b), [next[b], next[b]]))[0]
@@ -25,12 +22,8 @@ function view(...els) {
   if (!sheet.open) sheet.showModal()
 }
 function draw(text) {
-  const q = qrcode(0, 'L'), g = qr.getContext('2d')
-  q.addData(text); q.make()
-  const n = q.getModuleCount()
-  qr.width = qr.height = n + 8
-  g.fillStyle = '#fff'; g.fillRect(0, 0, n + 8, n + 8); g.fillStyle = '#000'
-  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (q.isDark(y, x)) g.fillRect(x + 4, y + 4, 1, 1)
+  const q = qrcode(0, 'L')
+  q.addData(text); q.make(); qr.src = q.createDataURL(1, 4)
 }
 const show = text => (draw(text), view(qr), tap(qr))
 
@@ -86,9 +79,9 @@ async function addKey() {
 
 async function refresh() {
   $('#wait').hidden = false; $('#sats').hidden = true
-  const ranges = [await branch(0), await branch(1)].map(d => ({ desc: d, range: 1000 }))
+  const descs = [await branch(0), await branch(1)]                                                // Core scans 1000 addresses each
   let s
-  while (!s) s = await rpc('scantxoutset', 'start', ranges).catch(e => { if (!/in progress/.test(e.message)) throw e; return sleep(5000) })
+  while (!s) s = await rpc('scantxoutset', 'start', descs).catch(e => { if (!/in progress/.test(e.message)) throw e; return sleep(5000) })
   coins = s.unspents
   const seen = JSON.parse(localStorage[keys] ?? '[-1,-1]')
   for (const c of coins) { const [, b, i] = c.desc.match(/\/(\d)\/(\d+)\]/); seen[b] = Math.max(seen[b], +i) }
@@ -106,12 +99,10 @@ async function lightSigners(psbt) {
 async function send() {
   let to
   await scan(t => (to = t.match(/^(?:bitcoin:)?([a-z0-9]+)(?:\?(.*))?$/i)))
-  const btcAmount = new URLSearchParams(to[2]).get('amount')
-  amt.value = btcAmount ? Math.round(btcAmount * 1e8) : ''
+  amt.value = Math.round(new URLSearchParams(to[2]).get('amount') * 1e8) || ''                    // BIP21 amount, if any
   view(amt, go); amt.focus(); await tap(go)
   const sats = +amt.value, rate = ((await rpc('estimatesmartfee', 2)).feerate ?? 1e-5) * 1e5   // sat/vB
-  const pick = []
-  let sum = 0, fee = 0
+  let pick = [], sum = 0, fee = 0
   for (const c of [...coins].sort((a, b) => b.amount - a.amount)) {                              // largest coins first
     if (sum >= sats + fee) break
     pick.push(c); sum += Math.round(c.amount * 1e8)

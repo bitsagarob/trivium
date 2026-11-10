@@ -13,8 +13,7 @@
   body, dialog { background: var(--bg); color: var(--fg); font: 600 9vmin system-ui }
   main { height: 100dvh; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: max(14dvh, env(safe-area-inset-bottom)) }
   .top { flex: 1; display: flex; align-items: center }
-  dialog[open] { height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly }
-  dialog { width: 100vw; max-width: none; max-height: none; border: 0; padding: 0 }
+  dialog[open] { width: 100vw; height: 100dvh; max-width: none; max-height: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly }
   [hidden] { display: none !important }
   .keys, .row { display: flex; gap: 6vmin }
   button, .dot { font: inherit; color: var(--k, inherit); background: none; border: .6vmin solid; border-radius: 50%; width: 25vmin; height: 25vmin }
@@ -23,7 +22,7 @@
   #wait .dot { animation: pulse .6s infinite alternate } #wait .dot:nth-child(2) { animation-delay: .2s } #wait .dot:nth-child(3) { animation-delay: .4s }
   @keyframes pulse { to { opacity: .15 } }
   #note { position: fixed; top: 4vmin; inset-inline: 0; text-align: center }
-  canvas { width: min(92vmin, 92dvh); image-rendering: pixelated }
+  img { width: min(92vmin, 92dvh); image-rendering: pixelated }
   video { width: 100vw; height: 80dvh; object-fit: cover }
   input { font: inherit; width: 80vw; text-align: center; background: none; color: inherit; border: 0; border-bottom: .6vmin solid; outline: 0 }
 </style>
@@ -50,13 +49,11 @@
 </main>
 
 <dialog id="sheet">
-  <canvas id="qr" hidden></canvas>
+  <img id="qr" alt="" hidden>
   <video id="cam" playsinline muted hidden></video>
   <input id="amt" inputmode="numeric" pattern="[0-9]*" aria-label="amount in sats" hidden>
   <button id="go" aria-label="confirm" hidden>↑</button>
-  <div class="row" id="signed" aria-label="signatures" hidden>
-    <i class="dot" style="--k: var(--k0)"></i><i class="dot" style="--k: var(--k1)"></i><i class="dot" style="--k: var(--k2)"></i>
-  </div>
+  <div class="row" id="signed" aria-label="signatures" hidden><i class="dot" style="--k: var(--k0)"></i><i class="dot" style="--k: var(--k1)"></i><i class="dot" style="--k: var(--k2)"></i></div>
 </dialog>
 
 <script type="module" src="app.js"></script>
