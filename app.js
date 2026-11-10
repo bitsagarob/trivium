@@ -79,14 +79,15 @@ async function addKey() {
 
 async function refresh() {
   $('#wait').hidden = false; $('#sats').hidden = true
-  const descs = [await branch(0), await branch(1)]                                                // Core scans 1000 addresses each
-  let s
-  while (!s) s = await rpc('scantxoutset', 'start', descs).catch(e => { if (!/in progress/.test(e.message)) throw e; return sleep(5000) })
-  coins = s.unspents
-  const seen = JSON.parse(localStorage[keys] ?? '[-1,-1]')
-  for (const c of coins) { const [, b, i] = c.desc.match(/\/(\d)\/(\d+)\]/); seen[b] = Math.max(seen[b], +i) }
-  localStorage[keys] = JSON.stringify(seen); next = seen.map(i => i + 1)
-  $('#sats').value = Math.round(s.total_amount * 1e8).toLocaleString()
+  const descs = [await branch(0), await branch(1)]                                                // 1000 addresses each
+  let found
+  while (!found) found = await rpc('scanblocks', 'start', descs).catch(e => { if (!/in progress/.test(e.message)) throw e; return sleep(5000) })
+  const history = (await rpc('getdescriptoractivity', found.relevant_blocks, descs, true)).activity // every receive and spend, mempool too
+  const spent = new Set(history.map(a => a.prevout_txid + ':' + a.prevout_vout)), paid = history.filter(a => a.type === 'receive')
+  coins = paid.filter(c => !spent.has(c.txid + ':' + c.vout))
+  const all = await Promise.all(descs.map(d => rpc('deriveaddresses', d, [0, 999])))
+  next = all.map(list => 1 + Math.max(-1, ...paid.map(c => list.indexOf(c.output_spk.address))))   // past every address ever paid
+  $('#sats').value = coins.reduce((sum, c) => sum + Math.round(c.amount * 1e8), 0).toLocaleString()
   $('#wait').hidden = true; $('#sats').hidden = false
 }
 
