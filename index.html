@@ -2,20 +2,23 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0b">
+<meta name="theme-color" content="#282828">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <title>Trivium</title>
 <style>
-  :root { --k0: #e63946; --k1: #f4c430; --k2: #2f6fed; color-scheme: dark }
+  /* Gruvbox dark (morhetz, a Vim theme): bg0, fg, bright red, bright yellow, bright blue */
+  :root { --bg: #282828; --fg: #ebdbb2; --k0: #fb4934; --k1: #fabd2f; --k2: #83a598; color-scheme: dark }
   * { margin: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none }
-  body, dialog { background: #0b0b0b; color: #f5f5f5; font: 600 9vmin system-ui }
-  main, dialog[open] { height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly }
+  body, dialog { background: var(--bg); color: var(--fg); font: 600 9vmin system-ui }
+  main { height: 100dvh; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: max(14dvh, env(safe-area-inset-bottom)) }
+  .top { flex: 1; display: flex; align-items: center }
+  dialog[open] { height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly }
   dialog { width: 100vw; max-width: none; max-height: none; border: 0; padding: 0 }
   [hidden] { display: none !important }
-  button, .dot { font: inherit; color: var(--k, inherit); background: none; border: .6vmin solid; border-radius: 50%; width: 30vmin; height: 30vmin }
+  .keys, .row { display: flex; gap: 6vmin }
+  button, .dot { font: inherit; color: var(--k, inherit); background: none; border: .6vmin solid; border-radius: 50%; width: 25vmin; height: 25vmin }
   .dot.on { background: var(--k) }
-  .row { display: flex; gap: 4vmin }
   .row .dot { width: 6vmin; height: 6vmin }
   #wait .dot { animation: pulse .6s infinite alternate } #wait .dot:nth-child(2) { animation-delay: .2s } #wait .dot:nth-child(3) { animation-delay: .4s }
   @keyframes pulse { to { opacity: .15 } }
@@ -28,16 +31,22 @@
 <output id="note"></output>
 
 <main id="setup">
-  <button class="dot" style="--k: var(--k0)" aria-label="add key 1"></button>
-  <button class="dot" style="--k: var(--k1)" aria-label="add key 2"></button>
-  <button class="dot" style="--k: var(--k2)" aria-label="add key 3"></button>
+  <div class="keys">
+    <button class="dot" style="--k: var(--k0)" aria-label="add key 1"></button>
+    <button class="dot" style="--k: var(--k1)" aria-label="add key 2"></button>
+    <button class="dot" style="--k: var(--k2)" aria-label="add key 3"></button>
+  </div>
 </main>
 
 <main id="home" hidden>
-  <div class="row" id="wait"><i class="dot" style="--k: var(--k0)"></i><i class="dot" style="--k: var(--k1)"></i><i class="dot" style="--k: var(--k2)"></i></div>
-  <output id="sats" aria-label="balance in sats" hidden></output>
-  <button id="recv" aria-label="receive">↓</button>
-  <button id="send" aria-label="send">↑</button>
+  <div class="top">
+    <div class="row" id="wait"><i class="dot" style="--k: var(--k0)"></i><i class="dot" style="--k: var(--k1)"></i><i class="dot" style="--k: var(--k2)"></i></div>
+    <output id="sats" aria-label="balance in sats" hidden></output>
+  </div>
+  <div class="keys">
+    <button id="recv" aria-label="receive">↓</button>
+    <button id="send" aria-label="send">↑</button>
+  </div>
 </main>
 
 <dialog id="sheet">

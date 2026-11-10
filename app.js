@@ -155,7 +155,7 @@ document.querySelectorAll('#setup .dot').forEach(b => b.onclick = () => run(addK
 $('#recv').onclick = () => run(async () => { await show(await address(0)); refresh().catch(fail) })
 $('#send').onclick = () => run(send)
 let press
-$('#home').onpointerdown = e => { if (e.target === e.currentTarget) press = setTimeout(() => run(() => show(desc())), 700) }
+$('#home').onpointerdown = e => { if (e.target.tagName !== 'BUTTON') press = setTimeout(() => run(() => show(desc())), 700) }
 $('#home').onpointerup = $('#home').onpointerleave = () => clearTimeout(press)
 render()
 if (keys.length === 3) refresh().catch(fail)
