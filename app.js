@@ -5,13 +5,14 @@ const $ = s => document.querySelector(s)
 const [sheet, qr, cam, amt, go, signed, note] = ['#sheet', '#qr', '#cam', '#amt', '#go', '#signed', '#note'].map($)
 const KEY = /\[[0-9a-f]{8}(\/\d+h)+\][xt]pub\w+/g
 let keys = decodeURIComponent(location.hash).match(KEY) ?? [], coins = [], next = [0, 0]
+const signet = location.search.includes('signet'), launch = signet ? 285000 : 975000           // Trivium's first block: no older history
 
 const desc = () => `wsh(sortedmulti(2,${keys.map(k => k + '/<0;1>/*')}))`
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 const btc = sats => (sats / 1e8).toFixed(8)
 const tap = el => new Promise(r => el.addEventListener('click', r, { once: true }))
 
-const rpc = (method, ...params) => fetch(location.search.includes('signet') ? 'signet' : 'rpc', { method: 'POST', body: JSON.stringify({ id: 0, method, params }) })
+const rpc = (method, ...params) => fetch(signet ? 'signet' : 'rpc', { method: 'POST', body: JSON.stringify({ id: 0, method, params }) })
   .then(r => r.json()).then(r => r.error ? Promise.reject(r.error) : r.result)
 // Core silently scans only the first path of a <0;1> descriptor, so ask for each branch on its own.
 const branch = async b => (await rpc('getdescriptorinfo', desc().replaceAll('<0;1>', b))).descriptor
@@ -82,7 +83,7 @@ async function refresh() {
   const descs = [await branch(0), await branch(1)]                                                // 1000 addresses each
   const pending = (await rpc('getdescriptoractivity', [], descs, true)).activity                   // mempool first: a coin mined
   let found                                                                                        // during the scan stays in view
-  while (!found) found = await rpc('scanblocks', 'start', descs).catch(e => { if (!/in progress/.test(e.message)) throw e; return sleep(5000) })
+  while (!found) found = await rpc('scanblocks', 'start', descs, launch).catch(e => { if (!/in progress/.test(e.message)) throw e; return sleep(5000) })
   const history = [...pending, ...(await rpc('getdescriptoractivity', found.relevant_blocks, descs, false)).activity]
   const spent = new Set(history.map(a => a.prevout_txid + ':' + a.prevout_vout))
   const paid = [...new Map(history.filter(a => a.type === 'receive').map(c => [c.txid + ':' + c.vout, c])).values()]

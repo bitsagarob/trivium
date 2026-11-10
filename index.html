@@ -17,8 +17,8 @@
   [hidden] { display: none !important }
   .keys, .row { display: flex; gap: 6vmin }
   button, .dot { font: inherit; color: var(--k, inherit); background: none; border: .6vmin solid; border-radius: 50%; width: 25vmin; height: 25vmin }
-  .dot.on { background: var(--k) }
-  .row .dot { width: 6vmin; height: 6vmin }
+  .dot.on { background: var(--k); color: var(--bg) }
+  .row .dot { width: 8vmin; height: 8vmin; font-size: 5vmin; display: grid; place-items: center }
   #wait .dot { animation: pulse .6s infinite alternate } #wait .dot:nth-child(2) { animation-delay: .2s } #wait .dot:nth-child(3) { animation-delay: .4s }
   @keyframes pulse { to { opacity: .15 } }
   #note { position: fixed; top: 4vmin; inset-inline: 0; text-align: center }
@@ -31,9 +31,9 @@
 
 <main id="setup">
   <div class="keys">
-    <button class="dot" style="--k: var(--k0)" aria-label="add key 1"></button>
-    <button class="dot" style="--k: var(--k1)" aria-label="add key 2"></button>
-    <button class="dot" style="--k: var(--k2)" aria-label="add key 3"></button>
+    <button class="dot" style="--k: var(--k0)" aria-label="add key 1">1</button>
+    <button class="dot" style="--k: var(--k1)" aria-label="add key 2">2</button>
+    <button class="dot" style="--k: var(--k2)" aria-label="add key 3">3</button>
   </div>
 </main>
 
@@ -53,7 +53,7 @@
   <video id="cam" playsinline muted hidden></video>
   <input id="amt" inputmode="numeric" pattern="[0-9]*" aria-label="amount in sats" hidden>
   <button id="go" aria-label="confirm" hidden>↑</button>
-  <div class="row" id="signed" aria-label="signatures" hidden><i class="dot" style="--k: var(--k0)"></i><i class="dot" style="--k: var(--k1)"></i><i class="dot" style="--k: var(--k2)"></i></div>
+  <div class="row" id="signed" aria-label="signatures" hidden><i class="dot" style="--k: var(--k0)">1</i><i class="dot" style="--k: var(--k1)">2</i><i class="dot" style="--k: var(--k2)">3</i></div>
 </dialog>
 
 <script type="module" src="app.js"></script>
